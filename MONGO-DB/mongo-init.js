@@ -3,7 +3,7 @@ db = db.getSiblingDB('customers-transactions');
 db.createCollection('customers');
 db.createCollection('environmentVariables');
 
-db.settings.insertOne({
+db.environmentVariables.insertOne({
     "btcSlotConfirmations": 6
 });
 
