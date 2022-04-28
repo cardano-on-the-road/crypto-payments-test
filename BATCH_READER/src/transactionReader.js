@@ -1,34 +1,34 @@
 const fs = require('fs');
 const path = require('path');
 
-let fi = undefined;
-let co = undefined;
+// let fi = undefined;
+// let co = undefined;
 
-function onFileContent(f, c) {
-    fi = f
-    co = c
-    console.log(co);
-}
+// function onFileContent(f, c) {
+//     fi = f
+//     co = c
+//     console.log(co);
+// }
 
-function transactionsReader(dirname, onFileContent, onError) {
-    fs.readdir(dirname, function (err, filenames) {
-        if (err) {
-            onError(err);
-            return;
-        }
-        let filePath;
-        filenames.forEach(function (filename) {
-            filePath = path.resolve(dirname, filename);
-            fs.readFile(filePath, 'utf-8', function (err, content) {
-                if (err) {
-                    onError(err);
-                    return;
-                }
-                onFileContent(filename, content);
-            });
-        });
-    });
-}
+// function reader(dirname, onFileContent, onError) {
+//     fs.readdir(dirname, function (err, filenames) {
+//         if (err) {
+//             onError(err);
+//             return;
+//         }
+//         let filePath;
+//         filenames.forEach(function (filename) {
+//             filePath = path.resolve(dirname, filename);
+//             fs.readFile(filePath, 'utf-8', function (err, content) {
+//                 if (err) {
+//                     onError(err);
+//                     return;
+//                 }
+//                 onFileContent(filename, content);
+//             });
+//         });
+//     });
+// }
 
 class TransactionReader {
 
@@ -53,17 +53,19 @@ class TransactionReader {
                             return;
                         }
                         contentObj = JSON.parse(content);
+                        this.transactions = [...this.transactions, ...contentObj.transactions];
                         this.filePath.push=filePath;
                     });
                 } catch (error) {
-                    this.errors.push(errors);
+                    this.errors.push(error);
                 }
-
             });
         });
     }
+
+    getTransactions(){
+        return this.transactions;
+    }
 }
 
-transactionReader('../../DATA', onFileContent, (err) => { console.log(err) });
-
-//export default transactionReader;
+module.exports = TransactionReader;

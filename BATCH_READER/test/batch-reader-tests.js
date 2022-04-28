@@ -2,6 +2,8 @@ const { MongoClient } = require('mongodb');
 const assert = require('assert');
 const fs = require('fs');
 const path = require('path');
+const TransactionReader = require('../src/TransactionReader');
+const { default: transactionReader } = require('../src/TransactionReader');
 
 let mongoClient = null;
 const settingsPath = path.resolve(__dirname, '../local_settings.json');
@@ -47,11 +49,18 @@ describe('Mongo DB Tests', async () => {
 });
 
 describe('Transaction tests', async () => {
-    it('Reading file', async () => {
+    it('Reading transaction', async () => {
+        let transactions;
+        const filesPath = path.resolve(__dirname, '../../DATA/');
+        const transactionReader = new TransactionReader();
+        transactionReader.readFiles(filesPath);
+        transactions = transactionReader.getTransactions();
+
+        console.log(transactions)
 
     })
 
-    it('Parse file', async () => {
+    it('Save transactions', async () => {
 
     })
 });
