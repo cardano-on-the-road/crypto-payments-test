@@ -1,0 +1,4 @@
+{
+    "mongo_db_endpoind": "",
+    "rabbit_mq_endpoint":""
+}

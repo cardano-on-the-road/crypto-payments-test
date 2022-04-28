@@ -1,0 +1,12 @@
+{
+  "name": "batch_reader",
+  "version": "1.0.0",
+  "description": "",
+  "main": "main.js",
+  "scripts": {
+    "test": "mocha",
+    "start":"node main.js"
+  },
+  "author": "Valerio Mellini",
+  "license": "ISC"
+}
