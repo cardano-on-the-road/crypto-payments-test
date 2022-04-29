@@ -15,10 +15,8 @@ class TransactionsReader {
 
         try {
             filenames = fs.readdirSync(this.dirname);
-            console.log('try',this.dirname);
             filenames.forEach((filename) => {
                 filePath = path.resolve(this.dirname, filename);
-                console.log('foreach',this.dirname);
                 fileContent = JSON.parse(fs.readFileSync(filePath));
                 transactions = [...transactions, ...fileContent.transactions];
             });
