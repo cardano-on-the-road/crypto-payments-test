@@ -27,8 +27,9 @@ describe('Mongo DB Tests', async () => {
         await mongoClient.connect();
         const db = mongoClient.db(settings.mongo_db_name);
         let collection = db.collection('environmentVariables');
-        const ris = await collection.findOne({'_id':'btcSlotConfirmations'})
-        assert.equal(parseInt(ris.value), 6);
+        const ris = await collection.findOne({ '_id': 'btcSlotConfirmations' });
+        const btcSlotConfirmations = parseInt(ris.value);
+        assert.equal(btcSlotConfirmations, 6);
         await mongoClient.close();
     });
 
@@ -46,15 +47,26 @@ describe('Mongo DB Tests', async () => {
         const db = client.db(settings.mongo_db_name);
         const customerEntities = db.collection('customerEntities');
         const customerBtcAddresses = db.collection('customerBtcAddresses');
-        let queryRes = await customerBtcAddresses.findOne({'_id':'mzzg8fvHXydKs8j9D2a8t7KpSXpGgAnk4n'});
-        let customer = await customerEntities.findOne({'_id': queryRes.taxCode});
+        let queryRes = await customerBtcAddresses.findOne({ '_id': 'mzzg8fvHXydKs8j9D2a8t7KpSXpGgAnk4n' });
+        let customer = await customerEntities.findOne({ '_id': queryRes.taxCode });
         assert.equal(customer.name, 'Jonathan');
+        await mongoClient.close()
+    })
+
+
+    it('BTC Address to customer relation failed', async () => {
+        const client = await mongoClient.connect();
+        const db = client.db(settings.mongo_db_name);
+        const customerEntities = db.collection('customerEntities');
+        const customerBtcAddresses = db.collection('customerBtcAddresses');
+        let queryRes = await customerBtcAddresses.findOne({ '_id': '000000000000' });
+        assert.equal(queryRes, undefined);
         await mongoClient.close()
     })
 });
 
 describe('Transaction tests', async () => {
-    
+
     it('Reading transaction', async () => {
         const filesPath = path.resolve(__dirname, './DATA-TEST/');
         const transactionsReader = new TransactionsReader(filesPath);
@@ -68,7 +80,7 @@ describe('Transaction tests', async () => {
         const transactionsReader = new TransactionsReader(filesPath);
         var readerResult = transactionsReader.filesReader();
         //const TransactionAnalyzer = new TransactionAnalyzer(readerResult.transactions);
-        
+
 
     })
 });

@@ -5,6 +5,10 @@ db.createCollection('customerBtcAddresses');
 db.createCollection('customerBalances');
 db.createCollection('environmentVariables');
 
+db.createCollection('validatedTransactions');
+db.createCollection('pendingTransaction');
+db.createCollection('unknownTransactions');
+
 db.environmentVariables.insertOne({
     "_id": "btcSlotConfirmations",
     "value": "6"
