@@ -76,8 +76,69 @@ class TransactionsHandler {
         return {txids, duplicatedTxids};
     }
 
-    async customerReport(customerEntity) {
+    async customerBalance(customerEntity) {
 
+        const agg = [
+            {
+              '$project': {
+                '_id': true, 
+                'address': true, 
+                'amount': true, 
+                'category': true, 
+                'confirmations': true, 
+                'amountAdj': {
+                  '$cond': [
+                    {
+                      '$eq': [
+                        '$category', 'receive'
+                      ]
+                    }, '$amount', {
+                      '$subtract': [
+                        0, '$amount'
+                      ]
+                    }
+                  ]
+                }
+              }
+            }, {
+              '$match': {
+                '$expr': {
+                  '$and': [
+                    {
+                      '$in': [
+                        '$address', [
+                          customerEntity.address
+                        ]
+                      ]
+                    }, {
+                      '$gt': [
+                        '$confirmations', 6
+                      ]
+                    }
+                  ]
+                }
+              }
+            }, {
+              '$group': {
+                '_id': '$address', 
+                'balance': {
+                  '$sum': '$amountAdj'
+                }, 
+                'count': {
+                  '$sum': 1
+                }
+              }
+            }
+          ];
+
+    }
+
+    async getLargestValidDeposid(){
+
+    }
+
+    async getSmallestValidDeposid(){
+        
     }
 }
 module.exports = TransactionsHandler;

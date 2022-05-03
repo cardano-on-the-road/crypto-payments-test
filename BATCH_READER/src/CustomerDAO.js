@@ -3,8 +3,10 @@ class CustomerDAO {
         this.dbConnection = parameter.dbConnection;
     }
 
-    getCustomerList() {
-        return null;
+    async getCustomersList() {
+        const customerEntities = this.dbConnection.collection('customerEntities');
+        const customers = await customerEntities.find({}).toArray();
+        return customers;
     }
 
     async getCustomerFromAddress(address) {
@@ -12,7 +14,7 @@ class CustomerDAO {
             {
                 '$match': {
                     '$expr': {
-                        '$in': [
+                        '$eq': [
                             address, '$btcAdresses'
                         ]
                     }
