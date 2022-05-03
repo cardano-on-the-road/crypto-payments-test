@@ -1,68 +1,55 @@
-const { MongoClient } = require('mongodb');
+const MongoConnector = require('../src/MongoConnector');
 const assert = require('assert');
 const fs = require('fs');
 const path = require('path');
 const TransactionsReader = require('../src/TransactionsReader');
-const TransactionAnalyzer = require('../src/TransactionAnalyzer');
+const TransactionsHandler = require('../src/TransactionsHandler');
+const CustomerDAO = require('../src/CustomerDAO');
 
 
-let mongoClient = null;
+let mongoConnector = null;
+let dbConnection = null;
 const settingsPath = path.resolve(__dirname, '../local_settings.json');
 const rawFile = fs.readFileSync(settingsPath);
 const settings = JSON.parse(rawFile);
 
 beforeEach(async () => {
-    mongoClient = new MongoClient(settings.mongo_db_url);
+    mongoConnector = new MongoConnector({
+        'mongoDbUrl': settings.mongo_db_url,
+        'mongoDbName': settings.mongo_db_name
+    });
+    dbConnection = await mongoConnector.getDbInstance();
 });
 
 describe('Mongo DB Tests', async () => {
 
     it('Connection test', async () => {
-        await mongoClient.connect();
-        assert(mongoClient);
-        await mongoClient.close();
+        assert(dbConnection);
+        mongoConnector.closeConnection();
     })
 
     it('Read confirmation transaction', async () => {
-        await mongoClient.connect();
-        const db = mongoClient.db(settings.mongo_db_name);
-        let collection = db.collection('environmentVariables');
+        let collection = dbConnection.collection('environmentVariables');
         const ris = await collection.findOne({ '_id': 'btcSlotConfirmations' });
         const btcSlotConfirmations = parseInt(ris.value);
         assert.equal(btcSlotConfirmations, 6);
-        await mongoClient.close();
+        mongoConnector.closeConnection();
     });
 
     it('Read customers list', async () => {
-        const client = await mongoClient.connect();
-        const db = client.db(settings.mongo_db_name);
-        let collection = db.collection('customerEntities');
+        let collection = dbConnection.collection('customerEntities');
         let customerList = await collection.find({}).toArray();
-        assert.equal(customerList.length, 7)
-        await mongoClient.close();
+        assert.equal(customerList.length, 7);
+        mongoConnector.closeConnection();
     });
 
-    it('BTC Address to customer relation', async () => {
-        const client = await mongoClient.connect();
-        const db = client.db(settings.mongo_db_name);
-        const customerEntities = db.collection('customerEntities');
-        const customerBtcAddresses = db.collection('customerBtcAddresses');
-        let queryRes = await customerBtcAddresses.findOne({ '_id': 'mzzg8fvHXydKs8j9D2a8t7KpSXpGgAnk4n' });
-        let customer = await customerEntities.findOne({ '_id': queryRes.taxCode });
-        assert.equal(customer.name, 'Jonathan');
-        await mongoClient.close()
+    it('BTC customer Address', async () => {
+        const customerEntities = dbConnection.collection('customerEntities');
+        let customer = await customerEntities.findOne({ 'taxIdCode': "4" });
+        assert.equal(customer.btcAdresses[0], '2N1SP7r92ZZJvYKG2oNtzPwYnzw62up7mTo');
+        mongoConnector.closeConnection();
     })
 
-
-    it('BTC Address to customer relation failed', async () => {
-        const client = await mongoClient.connect();
-        const db = client.db(settings.mongo_db_name);
-        const customerEntities = db.collection('customerEntities');
-        const customerBtcAddresses = db.collection('customerBtcAddresses');
-        let queryRes = await customerBtcAddresses.findOne({ '_id': '000000000000' });
-        assert.equal(queryRes, undefined);
-        await mongoClient.close()
-    })
 });
 
 describe('Transaction tests', async () => {
@@ -71,16 +58,49 @@ describe('Transaction tests', async () => {
         const filesPath = path.resolve(__dirname, './DATA-TEST/');
         const transactionsReader = new TransactionsReader(filesPath);
         var readerResult = transactionsReader.filesReader();
-        assert.equal(readerResult.transactions.length, 8);
+        assert.equal(readerResult.transactions.length, 316);
 
     })
 
-    it('Save transactions', async () => {
+    it('Store transactions', async () => {
         const filesPath = path.resolve(__dirname, './DATA-TEST/');
+
+        const transactions = dbConnection.collection('transactions');
+        transactions.deleteMany({});
+
         const transactionsReader = new TransactionsReader(filesPath);
         var readerResult = transactionsReader.filesReader();
-        //const TransactionAnalyzer = new TransactionAnalyzer(readerResult.transactions);
 
+        const transactionsHandler = new TransactionsHandler(
+            {
+                'dbConnection': dbConnection
+            });
+
+        const ris = await transactionsHandler.storeTransactions(readerResult.transactions);
+        console.log('Stored Lenght',ris.length, 'Reader lenght', readerResult.transactions.length);
+        assert.equal(ris.txids.length + ris.duplicatedTxids.length, readerResult.transactions.length);
+    })
+
+    it('Balance for user', async () => {
 
     })
+
 });
+
+describe('Customers', async () => {
+
+    it('Address list', async () => {
+
+    });
+
+    it ('Customer from address', async () => {
+        const customerDAO = new CustomerDAO(           {
+            'dbConnection': dbConnection
+        });
+        let ris = await customerDAO.getCustomerFromAddress('mvd6qFeVkqH6MNAS2Y2cLifbdaX5XUkbZJ');
+        assert.equal(ris.name, 'Wesley')
+
+        ris = await customerDAO.getCustomerFromAddress('000000000');
+        assert.equal(ris, undefined);
+    });
+})
