@@ -147,8 +147,9 @@ class TransactionsHandler {
         }
     }
 
-    async depositedWithoutReference() {
+    async getDepositedWithoutReference() {
 
+        console.log(this.customersAddresses);
         const agg = [
             {
                 '$match': {
@@ -157,9 +158,7 @@ class TransactionsHandler {
                             {
                                 '$not': {
                                     '$in': [
-                                        '$address', [
-                                            'myAre6hq8uSDAzhmNit1fjkTeajebBzrKZ', 'mmFFG4jqAtw9MoCC88hw5FNfreQWuEHADp', 'mzzg8fvHXydKs8j9D2a8t7KpSXpGgAnk4n', 'mvd6qFeVkqH6MNAS2Y2cLifbdaX5XUkbZJ', '2N1SP7r92ZZJvYKG2oNtzPwYnzw62up7mTo'
-                                        ]
+                                        '$address', this.customersAddresses
                                     ]
                                 }
                             }, {

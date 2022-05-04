@@ -162,7 +162,30 @@ describe('Transaction tests', async () => {
     })
 
     it('Deposit without reference', async () => {
+        const mongoConnector = new MongoConnector({
+            'mongoDbUrl': settings.mongo_db_url,
+            'mongoDbName': settings.mongo_db_name
+        });
+        const dbConnection = await mongoConnector.getDbInstance();
 
+        let environmentVariables = dbConnection.collection('environmentVariables');
+        let ris = await environmentVariables.findOne({ '_id': 'btcSlotConfirmations' });
+        const btcSlotConfirmationsThreshold = parseInt(ris.value);
+
+        const customerDAO = new CustomerDAO({dbConnection});
+
+        const customersAddresses = await customerDAO.getCustomersAddresses();
+        
+        const transactionsHandler = new TransactionsHandler({dbConnection, 
+            customersAddresses, 
+            btcSlotConfirmationsThreshold});
+
+        ris = await transactionsHandler.getDepositedWithoutReference();
+
+        assert.equal(ris.count, 52);
+        assert.equal(ris.balance, 12.26702683000002);
+
+        dbConnection.closeConnection();
     })
 
 });
