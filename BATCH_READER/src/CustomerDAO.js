@@ -1,3 +1,5 @@
+const logger = require('./logger');
+
 class CustomerDAO {
     constructor(parameter) {
         this.dbConnection = parameter.dbConnection;
@@ -9,13 +11,25 @@ class CustomerDAO {
         return customers;
     }
 
+    async getCustomersAddresses() {
+        const customers = await this.getCustomersList();
+        let customerAddresses = [];
+        if (customers) {
+            for (var customer of customers) {
+                customerAddresses.push(customer.btcAddress);
+            }
+            return customerAddresses;
+        }
+        return [];
+    }
+
     async getCustomerFromAddress(address) {
         const agg = [
             {
                 '$match': {
                     '$expr': {
                         '$eq': [
-                            address, '$btcAdresses'
+                            address, '$btcAddress'
                         ]
                     }
                 }
@@ -29,7 +43,7 @@ class CustomerDAO {
             }
             return undefined;
         } catch (error) {
-            console.log(error);
+            logger('Exception', 'error', 4, this.dbConnection);
         }
     }
 }

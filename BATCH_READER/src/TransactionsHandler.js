@@ -1,9 +1,11 @@
-
+const logger = require('./logger')
 
 class TransactionsHandler {
 
     constructor(parameters) {
         this.dbConnection = parameters.dbConnection;
+        this.customersAddresses = parameters.customersAddresses;
+        this.btcSlotConfirmationsThreshold = parameters.btcSlotConfirmationsThreshold;
     }
 
     async storeTransactions(transactions) {
@@ -111,8 +113,8 @@ class TransactionsHandler {
                         ]
                       ]
                     }, {
-                      '$gt': [
-                        '$confirmations', 6
+                      '$gte': [
+                        '$confirmations', this.validTransactionThreshold
                       ]
                     }
                   ]
@@ -133,12 +135,55 @@ class TransactionsHandler {
 
     }
 
-    async getLargestValidDeposid(){
-
-    }
-
-    async getSmallestValidDeposid(){
+    async getSmallestLargestValidDeposid(){
         
+        
+        const agg = [
+            {
+              '$match': {
+                '$expr': {
+                  '$and': [
+                    {
+                      '$in': [
+                        '$address', this.customersAddresses
+                      ]
+                    }, {
+                      '$gte': [
+                        '$confirmations', this.validTransactionThreshold
+                      ]
+                    }, {
+                      '$eq': [
+                        '$category', 'receive'
+                      ]
+                    }
+                  ]
+                }
+              }
+            }, {
+              '$group': {
+                '_id': {}, 
+                'max': {
+                  '$max': '$amount'
+                }, 
+                'min': {
+                  '$min': '$amount'
+                }
+              }
+            }
+          ];
+
+          console.log(this.btcSlotConfirmationsThreshold, this.customersAddresses);
+          const transactionsColl = this.dbConnection.collection('transactions');
+          const ris = await transactionsColl.aggregate(agg).toArray();
+
+          if(ris.length == 1){
+              return ris[0]
+          }
+          return undefined;
+
+
+
     }
+
 }
 module.exports = TransactionsHandler;

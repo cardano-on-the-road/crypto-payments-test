@@ -5,10 +5,9 @@ const path = require('path');
 const TransactionsReader = require('../src/TransactionsReader');
 const TransactionsHandler = require('../src/TransactionsHandler');
 const CustomerDAO = require('../src/CustomerDAO');
+const logger = require('../src/logger');
 
 
-let mongoConnector = null;
-let dbConnection = null;
 const settingsPath = path.resolve(__dirname, '../local_settings.json');
 const rawFile = fs.readFileSync(settingsPath);
 const settings = JSON.parse(rawFile);
@@ -45,9 +44,9 @@ describe('Mongo DB Tests', async () => {
 
         let collection = dbConnection.collection('environmentVariables');
         const ris = await collection.findOne({ '_id': 'btcSlotConfirmations' });
-        const btcSlotConfirmations = parseInt(ris.value);
+        const btcSlotConfirmationsThreshold = parseInt(ris.value);
         await mongoConnector.closeConnection();
-        assert.equal(btcSlotConfirmations, 6);
+        assert.equal(btcSlotConfirmationsThreshold, 6);
     });
 
 
@@ -63,7 +62,7 @@ describe('Mongo DB Tests', async () => {
         const customerEntities = dbConnection.collection('customerEntities');
         let customer = await customerEntities.findOne({ 'taxIdCode': "4" });
         mongoConnector.closeConnection();
-        assert.equal(customer.btcAdresses, '2N1SP7r92ZZJvYKG2oNtzPwYnzw62up7mTo');
+        assert.equal(customer.btcAddress, '2N1SP7r92ZZJvYKG2oNtzPwYnzw62up7mTo');
 
     })
 
@@ -110,11 +109,29 @@ describe('Transaction tests', async () => {
 
     })
 
-    it('Largest valid deposit', async () => {
+    it('Smallest largest valid deposit', async () => {
+        const mongoConnector = new MongoConnector({
+            'mongoDbUrl': settings.mongo_db_url,
+            'mongoDbName': settings.mongo_db_name
+        });
+        const dbConnection = await mongoConnector.getDbInstance();
 
-    })
+        let environmentVariables = dbConnection.collection('environmentVariables');
+        const ris = await environmentVariables.findOne({ '_id': 'btcSlotConfirmations' });
+        const btcSlotConfirmationsThreshold = parseInt(ris.value);
 
-    it('Smallest valid deposit', async () => {
+        const customerDAO = new CustomerDAO({dbConnection});
+
+        const customersAddresses = await customerDAO.getCustomersAddresses();
+        
+        const transactionsHandler = new TransactionsHandler({dbConnection, 
+            customersAddresses, 
+            btcSlotConfirmationsThreshold});
+
+        const minMax = await transactionsHandler.getSmallestLargestValidDeposid();
+        console.log(minMax);
+            
+        await mongoConnector.closeConnection();
 
     })
 
@@ -161,4 +178,26 @@ describe('Customers', async () => {
         assert.equal(ris, undefined);
     });
 })
+
+describe('Logs', async () => {
+
+    it('test insert log', async () => {
+        const mongoConnector = new MongoConnector({
+            'mongoDbUrl': settings.mongo_db_url,
+            'mongoDbName': settings.mongo_db_name
+        });
+        const dbConnection = await mongoConnector.getDbInstance();
+        const logCollection = dbConnection.collection('logs');
+        //await logCollection.deleteMany({});
+
+        await logger('info', 'log test1', 0, dbConnection);
+        await logger('info', 'log test2', 0, dbConnection);
+
+        const logs = await logCollection.find({}).toArray();
+        
+        await mongoConnector.closeConnection();
+        //assert.equal(logs[1].msg, 'log test2')
+
+    });
+});
 
