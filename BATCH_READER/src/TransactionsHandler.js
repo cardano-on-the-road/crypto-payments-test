@@ -43,18 +43,18 @@ class TransactionsHandler {
                     },
                     { upsert: true });
 
-                if (ris.upsertedCount > 0 && ris.acknowledged == true)  {
+                if (ris.upsertedCount > 0 && ris.acknowledged == true) {
                     txids.push(ris.upsertedId);
                 }
-                if (ris.matchedCount>0 && ris.acknowledged == true) {
+                if (ris.matchedCount > 0 && ris.acknowledged == true) {
                     duplicatedTxids.push(transaction.txid + '#' + transaction.vout);
                 }
-                if (ris.modifiedCount>0) {
+                if (ris.modifiedCount > 0) {
                     conflictTxids.push(ris.upsertedId);
                 }
 
             } catch (error) {
-                console.log(error);
+
                 await transactionErrorCollection.insertOne({
                     '_id': transaction.txid + '#' + transaction.vout,
                     "address": transaction.address,
@@ -75,114 +75,200 @@ class TransactionsHandler {
                 });
             }
         }
-        return {txids, duplicatedTxids};
+        return { txids, duplicatedTxids };
     }
 
     async customerBalance(customerEntity) {
 
         const agg = [
             {
-              '$project': {
-                '_id': true, 
-                'address': true, 
-                'amount': true, 
-                'category': true, 
-                'confirmations': true, 
-                'amountAdj': {
-                  '$cond': [
-                    {
-                      '$eq': [
-                        '$category', 'receive'
-                      ]
-                    }, '$amount', {
-                      '$subtract': [
-                        0, '$amount'
-                      ]
-                    }
-                  ]
-                }
-              }
-            }, {
-              '$match': {
-                '$expr': {
-                  '$and': [
-                    {
-                      '$in': [
-                        '$address', [
-                          customerEntity.address
+                '$match': {
+                    '$expr': {
+                        '$and': [
+                            {
+                                '$eq': [
+                                    '$address', 'mvd6qFeVkqH6MNAS2Y2cLifbdaX5XUkbZJ'
+                                ]
+                            }, {
+                                '$gt': [
+                                    '$confirmations', 6
+                                ]
+                            }, {
+                                '$or': [
+                                    {
+                                        '$eq': [
+                                            '$category', 'receive'
+                                        ]
+                                    }, {
+                                        '$eq': [
+                                            '$category', 'send'
+                                        ]
+                                    }
+                                ]
+                            }
                         ]
-                      ]
-                    }, {
-                      '$gte': [
-                        '$confirmations', this.validTransactionThreshold
-                      ]
                     }
-                  ]
                 }
-              }
             }, {
-              '$group': {
-                '_id': '$address', 
-                'balance': {
-                  '$sum': '$amountAdj'
-                }, 
-                'count': {
-                  '$sum': 1
+                '$project': {
+                    '_id': true,
+                    'address': true,
+                    'amount': true,
+                    'category': true,
+                    'confirmations': true
                 }
-              }
+            }, {
+                '$group': {
+                    '_id': '$address',
+                    'balance': {
+                        '$sum': '$amount'
+                    },
+                    'count': {
+                        '$sum': 1
+                    }
+                }
             }
-          ];
+        ];
+
+        try {
+            const transactionsColl = this.dbConnection.collection('transactions');
+            const ris = await transactionsColl.aggregate(agg).toArray();
+            if (ris.length == 1) {
+                return ris[0]
+            }
+            return undefined;
+
+        } catch (error) {
+            logger('exception',
+                'TransactionHandler - customer balance' + error,
+                4,
+                this.dbConnection);
+            return undefined;
+        }
+    }
+
+    async depositedWithoutReference() {
+
+        const agg = [
+            {
+                '$match': {
+                    '$expr': {
+                        '$and': [
+                            {
+                                '$not': {
+                                    '$in': [
+                                        '$address', [
+                                            'myAre6hq8uSDAzhmNit1fjkTeajebBzrKZ', 'mmFFG4jqAtw9MoCC88hw5FNfreQWuEHADp', 'mzzg8fvHXydKs8j9D2a8t7KpSXpGgAnk4n', 'mvd6qFeVkqH6MNAS2Y2cLifbdaX5XUkbZJ', '2N1SP7r92ZZJvYKG2oNtzPwYnzw62up7mTo'
+                                        ]
+                                    ]
+                                }
+                            }, {
+                                '$or': [
+                                    {
+                                        '$eq': [
+                                            '$category', 'send'
+                                        ]
+                                    }, {
+                                        '$eq': [
+                                            '$category', 'receive'
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                }
+            }, {
+                '$project': {
+                    '_id': true,
+                    'address': true,
+                    'amount': true,
+                    'category': true,
+                    'confirmations': true
+                }
+            }, {
+                '$group': {
+                    '_id': {},
+                    'count': {
+                        '$sum': 1
+                    },
+                    'balance': {
+                        '$sum': '$amount'
+                    }
+                }
+            }
+        ];
+
+        try {
+            const transactionsColl = this.dbConnection.collection('transactions');
+            const ris = await transactionsColl.aggregate(agg).toArray();
+
+            if (ris.length == 1) {
+                return ris[0]
+            }
+            return undefined;
+        } catch (error) {
+            logger('exception',
+                'TransactionsHandler - depositedWithoutReference' + error,
+                4,
+                this.dbConnection);
+            return undefined;
+        }
 
     }
 
-    async getSmallestLargestValidDeposid(){
-        
-        
+    async getSmallestLargestValidDeposid() {
+
         const agg = [
             {
-              '$match': {
-                '$expr': {
-                  '$and': [
-                    {
-                      '$in': [
-                        '$address', this.customersAddresses
-                      ]
-                    }, {
-                      '$gte': [
-                        '$confirmations', this.validTransactionThreshold
-                      ]
-                    }, {
-                      '$eq': [
-                        '$category', 'receive'
-                      ]
+                '$match': {
+                    '$expr': {
+                        '$and': [
+                            {
+                                '$in': [
+                                    '$address', this.customersAddresses
+                                ]
+                            }, {
+                                '$gte': [
+                                    '$confirmations', this.validTransactionThreshold
+                                ]
+                            }, {
+                                '$eq': [
+                                    '$category', 'receive'
+                                ]
+                            }
+                        ]
                     }
-                  ]
                 }
-              }
             }, {
-              '$group': {
-                '_id': {}, 
-                'max': {
-                  '$max': '$amount'
-                }, 
-                'min': {
-                  '$min': '$amount'
+                '$group': {
+                    '_id': {},
+                    'max': {
+                        '$max': '$amount'
+                    },
+                    'min': {
+                        '$min': '$amount'
+                    }
                 }
-              }
             }
-          ];
-
-          console.log(this.btcSlotConfirmationsThreshold, this.customersAddresses);
-          const transactionsColl = this.dbConnection.collection('transactions');
-          const ris = await transactionsColl.aggregate(agg).toArray();
-
-          if(ris.length == 1){
-              return ris[0]
-          }
-          return undefined;
+        ];
 
 
+        try {
+            const transactionsColl = this.dbConnection.collection('transactions');
+            const ris = await transactionsColl.aggregate(agg).toArray();
 
+            if (ris.length == 1) {
+                return ris[0]
+            }
+            return undefined;
+        } catch (error) {
+            logger('exception',
+                'TransactionsHandler - getSmallestLargestValidDeposid' + error,
+                4,
+                this.dbConnection);
+            return undefined;
+        }
     }
 
 }

@@ -106,7 +106,31 @@ describe('Transaction tests', async () => {
     })
 
     it('Balance for user', async () => {
+        const mongoConnector = new MongoConnector({
+            'mongoDbUrl': settings.mongo_db_url,
+            'mongoDbName': settings.mongo_db_name
+        });
+        const dbConnection = await mongoConnector.getDbInstance();
+        
+        let environmentVariables = dbConnection.collection('environmentVariables');
+        let ris = await environmentVariables.findOne({ '_id': 'btcSlotConfirmations' });
+        const btcSlotConfirmationsThreshold = parseInt(ris.value);
 
+        const customerDAO = new CustomerDAO({dbConnection});
+
+        const customersAddresses = await customerDAO.getCustomersAddresses();
+        
+        const transactionsHandler = new TransactionsHandler({dbConnection, 
+            customersAddresses, 
+            btcSlotConfirmationsThreshold});
+
+        const customer = {  "_id": "1",  "taxIdCode": "1",  "name": "Wesley",  "lastname": "Crusher",  "btcAddress": "mvd6qFeVkqH6MNAS2Y2cLifbdaX5XUkbZJ"}    
+        ris = await transactionsHandler.customerBalance(customer);
+        assert.equal(ris.balance, 183);
+        assert.equal(ris.count, 35);
+        
+
+        await mongoConnector.closeConnection();
     })
 
     it('Smallest largest valid deposit', async () => {
@@ -129,7 +153,9 @@ describe('Transaction tests', async () => {
             btcSlotConfirmationsThreshold});
 
         const minMax = await transactionsHandler.getSmallestLargestValidDeposid();
-        console.log(minMax);
+
+        assert.equal(minMax.min, 0);
+        assert.equal(minMax.max, 99.61064066);
             
         await mongoConnector.closeConnection();
 
