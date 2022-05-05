@@ -129,7 +129,6 @@ describe('Transaction tests', async () => {
         assert.equal(ris.balance, 183);
         assert.equal(ris.count, 35);
         
-
         await mongoConnector.closeConnection();
     })
 

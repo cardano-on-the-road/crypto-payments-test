@@ -8,19 +8,16 @@ const CustomerDAO = require('./src/CustomerDAO');
 const logger = require('./src/logger');
 
 const getName = (customer) => {
-    
-    if(Boolean(customer.name) && Boolean(customer.lastname)){
-        return customer.name +' '+ customer.lastname
+
+    if (Boolean(customer.name) && Boolean(customer.lastname)) {
+        return customer.name + ' ' + customer.lastname
     }
     else {
         return customer.lastname;
     }
-
-} 
+}
 
 const main = async () => {
-
-
 
     const settingsPath = path.resolve(__dirname, './settings.json');
     const rawFile = fs.readFileSync(settingsPath);
@@ -55,15 +52,17 @@ const main = async () => {
     const transactionsReader = new TransactionsReader(dataPath);
     var readerResult = transactionsReader.filesReader();
 
-    await logger('info', 'Reading transactions from files with ' + readerResult.errors.length + ' errors' , 1, dbConnection);
-    if(readerResult.errors.length > 0){
+    await logger('info', 'Reading transactions from files with ' + readerResult.errors.length + ' errors', 1, dbConnection);
+    if (readerResult.errors.length > 0) {
         await logger('exception', 'Reading transactions from file: ' + readerResult.errors, 4, dbConnection);
     }
-    const transactionsHandler = new TransactionsHandler({dbConnection, 
-        customers, 
-        btcSlotConfirmationsThreshold});
+    const transactionsHandler = new TransactionsHandler({
+        dbConnection,
+        customersAddresses,
+        btcSlotConfirmationsThreshold
+    });
 
-    if (readerResult.transactions){
+    if (readerResult.transactions) {
         await transactionsHandler.storeTransactions(readerResult.transactions);
         await logger('info', 'Saving transaction completed', 0, dbConnection);
     }
@@ -71,20 +70,43 @@ const main = async () => {
     //Print customer balance
     var customerBalance;
     if (customers) {
-        for (var customer of customers) {
-            customerBalance = await transactionsHandler.customerBalance(customer);
-            console.log('Deposited for ' + getName(customer) + ': ' + 'count=' + customerBalance.count +' sum=' + customerBalance.balance);
+        try {
+            for (var customer of customers) {
+                customerBalance = await transactionsHandler.customerBalance(customer);
+                console.log('Deposited for ' + getName(customer) + ': ' + 'count=' + customerBalance.count + ' sum=' + customerBalance.balance);
+            }
+        }
+        catch (error) {
+            await logger('exception', 'Customer balances\n' + error, 4, dbConnection);
         }
     }
 
+    await logger('info', 'Customer balances completed', 0, dbConnection);
+
     //Deposited without reference
+    const depositedWithoutReference = await transactionsHandler.getDepositedWithoutReference();
+    if (depositedWithoutReference) {
+        console.log('Deposited without reference: ' + 'count=' + depositedWithoutReference.count + ' sum=' + depositedWithoutReference.balance);
+        await logger('info', 'Deposited without reference completed', 0, dbConnection);
+    }
+    else {
+        await logger('error', 'depositedWithoutReference', 2, dbConnection);
+    }
 
     //Smallest and largest deposited
+    const minMax = await transactionsHandler.getSmallestLargestValidDeposid();
+    if (minMax) {
+        await logger('info', 'Smallest and largest deposited completed', 0, dbConnection);
+        console.log('Smallest valid deposit: ' + minMax.min);
+        console.log('Largest valid deposit: ' + minMax.max);
+    }
+    else {
+        await logger('error', 'Smallest and largest deposited', 2, dbConnection);
+    }
 
-    await logger('info', 'Closing connection successfully', 0, dbConnection);
+    await logger('info', 'job completed', 0, dbConnection);
+    await logger('info', 'Closing connection with Mongo', 0, dbConnection);
     await mongoConnector.closeConnection();
-    
-
 }
 
 main();

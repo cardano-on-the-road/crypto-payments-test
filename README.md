@@ -6,7 +6,7 @@
 ## Assumptions
 * Deposited balances are calculated `receive transactions - send transactions`
 * transactions of categories `immature` and `generate` are omitted.
-* A registered customer has a single wallet 
+* A registered customer has associated to a single bitcoin address. 
 
 ## What could be improved
 * In this model a customer has a single BTC address. The application should handle multiple address for every account.
