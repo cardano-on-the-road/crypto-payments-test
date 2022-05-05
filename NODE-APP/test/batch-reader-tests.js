@@ -12,14 +12,6 @@ const settingsPath = path.resolve(__dirname, './test_settings.json');
 const rawFile = fs.readFileSync(settingsPath);
 const settings = JSON.parse(rawFile);
 
-beforeEach(async () => {
-    // mongoConnector = new MongoConnector({
-    //     'mongoDbUrl': settings.mongo_db_url,
-    //     'mongoDbName': settings.mongo_db_name
-    // });
-    // dbConnection = await mongoConnector.getDbInstance();
-});
-
 describe('Mongo DB Tests', async () => {
 
     it('Connection test', async () => {

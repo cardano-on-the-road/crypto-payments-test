@@ -211,14 +211,9 @@ class TransactionsHandler {
             {
                 '$match': {
                     '$expr': {
-                        '$and': [
-                            {
-                                '$in': [
-                                    '$address', this.customersAddresses
-                                ]
-                            }, {
+                        '$and': [ {
                                 '$gte': [
-                                    '$confirmations', this.validTransactionThreshold
+                                    '$confirmations', this.btcSlotConfirmationsThreshold
                                 ]
                             }, {
                                 '$eq': [
