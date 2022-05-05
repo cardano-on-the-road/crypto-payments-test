@@ -10,6 +10,12 @@ From the console enter in the project folder, and execute:
 docker-compose up --build node
 ```
 
+```bash
+docker-compose logs --tail 10 node | cut -f2 -d "|" 
+```
+
+
+
 ## Assumptions
 * Deposited balances are calculated: `receive transactions - send transactions`.
 * Transactions of categories `immature` and `generate` are omitted.

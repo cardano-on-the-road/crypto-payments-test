@@ -3,7 +3,7 @@ version: '3.1'
 services:
 
   node:
-    container_name: node-app-transactions-scraper
+    container_name: transactions-batch-reader
     build: .
     depends_on:
       - mongo

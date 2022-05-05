@@ -6,14 +6,10 @@ db.createCollection('transactionsError');
 db.createCollection('logs');
 db.createCollection('environmentVariables');
 
-
-
 db.environmentVariables.insertOne({
     "_id": "btcSlotConfirmations",
     "value": "6"
 });
-
-
 
 db.customerEntities.insertMany([
     {
