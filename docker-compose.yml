@@ -1,10 +1,17 @@
-# Use root/example as user/password credentials
 version: '3.1'
 
 services:
 
+  node:
+    container_name: node-app-transactions-scraper
+    build: .
+    depends_on:
+      - mongo
+
+
   mongo:
     image: mongo:5.0
+    container_name: mongo-db-database
     restart: always
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
@@ -16,6 +23,7 @@ services:
 
   mongo-express:
     image: mongo-express:1.0.0-alpha.4
+    container_name: mongo-express
     restart: always
     ports:
       - 8081:8081
@@ -23,3 +31,6 @@ services:
       ME_CONFIG_MONGODB_ADMINUSERNAME: root
       ME_CONFIG_MONGODB_ADMINPASSWORD: kr4k3n
       ME_CONFIG_MONGODB_URL: mongodb://root:kr4k3n@mongo:27017/
+    depends_on:
+      - mongo
+  

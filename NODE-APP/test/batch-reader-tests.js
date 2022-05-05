@@ -8,7 +8,7 @@ const CustomerDAO = require('../src/CustomerDAO');
 const logger = require('../src/logger');
 
 
-const settingsPath = path.resolve(__dirname, '../local_settings.json');
+const settingsPath = path.resolve(__dirname, './test_settings.json');
 const rawFile = fs.readFileSync(settingsPath);
 const settings = JSON.parse(rawFile);
 
@@ -185,7 +185,7 @@ describe('Transaction tests', async () => {
         assert.equal(ris.count, 52);
         assert.equal(ris.balance, 12.26702683000002);
 
-        dbConnection.closeConnection();
+        mongoConnector.closeConnection();
     })
 
 });

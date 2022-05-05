@@ -11,8 +11,7 @@ class CustomerDAO {
         return customers;
     }
 
-    async getCustomersAddresses() {
-        const customers = await this.getCustomersList();
+    async getCustomersAddresses(customers) {
         let customerAddresses = [];
         if (customers) {
             for (var customer of customers) {

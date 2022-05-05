@@ -87,11 +87,11 @@ class TransactionsHandler {
                         '$and': [
                             {
                                 '$eq': [
-                                    '$address', 'mvd6qFeVkqH6MNAS2Y2cLifbdaX5XUkbZJ'
+                                    '$address', customerEntity.btcAddress
                                 ]
                             }, {
                                 '$gt': [
-                                    '$confirmations', 6
+                                    '$confirmations', this.btcSlotConfirmationsThreshold
                                 ]
                             }, {
                                 '$or': [
@@ -149,7 +149,6 @@ class TransactionsHandler {
 
     async getDepositedWithoutReference() {
 
-        console.log(this.customersAddresses);
         const agg = [
             {
                 '$match': {

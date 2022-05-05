@@ -1,5 +1,5 @@
 {
     "mongo_db_url": "mongodb://root:kr4k3n@mongo:27017/",
     "mongo_db_name":"customers-transactions",
-    "rabbit_mq_url":""
+    "data_folder_name":"../DATA/"
 }
