@@ -1,7 +1,7 @@
 # Solution design
 
 ## Architecture
-![](./IMG/solution-kr.jpeg)
+![](./IMG/solution-kr.svg)
 
 ## How to run the project
 From the console enter in the project folder, and execute:
@@ -17,11 +17,14 @@ docker-compose logs --tail 10 node | cut -f2 -d "|"
 
 
 ## Assumptions
+
+* Jsons are in `DATA` folder.
 * Deposited balances are calculated: `receive transactions - send transactions`.
 * Transactions of categories `immature` and `generate` are omitted.
 * A registered customer has been associated with a single bitcoin address. 
 * A deposit is valid when it has at least 6 confirmations and is associated with a known customer.
 * Confirmations are not verified for deposits without reference.
+* Files are not digested after they have been readed.
 
 ## What could be improved
 * In this model, a customer has a single BTC address. The application should handle multiple addresses for every account.
