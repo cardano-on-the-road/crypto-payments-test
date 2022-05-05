@@ -90,7 +90,7 @@ class TransactionsHandler {
                                     '$address', customerEntity.btcAddress
                                 ]
                             }, {
-                                '$gt': [
+                                '$gte': [
                                     '$confirmations', this.btcSlotConfirmationsThreshold
                                 ]
                             }, {
@@ -152,27 +152,17 @@ class TransactionsHandler {
         const agg = [
             {
                 '$match': {
-                    '$expr': {
-                        '$and': [
+                    $expr: {
+                      $and: [
                             {
-                                '$not': {
-                                    '$in': [
-                                        '$address', this.customersAddresses
+                            $not: {$in: ['$address',this.customersAddresses]}},
+                            {
+                            $or:    [  
+                                        {$eq: ['$category', 'send']},
+                                        {$eq: ['$category', 'receive']}
                                     ]
-                                }
-                            }, {
-                                '$or': [
-                                    {
-                                        '$eq': [
-                                            '$category', 'send'
-                                        ]
-                                    }, {
-                                        '$eq': [
-                                            '$category', 'receive'
-                                        ]
-                                    }
-                                ]
-                            }
+                                },
+                                {'$gte': ['$confirmations',this.btcSlotConfirmationsThreshold]}
                         ]
                     }
                 }

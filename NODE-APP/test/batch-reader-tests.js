@@ -182,8 +182,8 @@ describe('Transaction tests', async () => {
 
         ris = await transactionsHandler.getDepositedWithoutReference();
 
-        assert.equal(ris.count, 52);
-        assert.equal(ris.balance, 12.26702683000002);
+        assert.equal(ris.count, 49);
+        assert.equal(ris.balance, -181.00689365);
 
         mongoConnector.closeConnection();
     })
