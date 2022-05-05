@@ -6,13 +6,14 @@ class CustomerDAO {
     }
 
     async getCustomersList() {
-        const customerEntities = this.dbConnection.collection('customerEntities');
-        const customers = await customerEntities.find({}).toArray();
+        const customersCollection = this.dbConnection.collection('customers');
+        const customers = await customersCollection.find({}).toArray();
         return customers;
     }
 
     async getCustomersAddresses(customers) {
         let customerAddresses = [];
+
         if (customers) {
             for (var customer of customers) {
                 customerAddresses.push(customer.btcAddress);
@@ -23,24 +24,11 @@ class CustomerDAO {
     }
 
     async getCustomerFromAddress(address) {
-        const agg = [
-            {
-                '$match': {
-                    '$expr': {
-                        '$eq': [
-                            address, '$btcAddress'
-                        ]
-                    }
-                }
-            }
-        ];
         try {
-            const customerEntities = this.dbConnection.collection('customerEntities');
-            const customers = await customerEntities.aggregate(agg).toArray();
-            if (customers.length == 1) {
-                return customers[0];
-            }
-            return undefined;
+            const customerColl = this.dbConnection.collection('customers');
+            let customer =  await customerColl.findOne({'btcAddress': address}); 
+            return customer;
+
         } catch (error) {
             logger('Exception', 'error', 4, this.dbConnection);
         }

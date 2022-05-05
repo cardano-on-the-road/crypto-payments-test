@@ -59,8 +59,8 @@ describe('Mongo DB Tests', async () => {
         });
         const dbConnection = await mongoConnector.getDbInstance();
 
-        const customerEntities = dbConnection.collection('customerEntities');
-        let customer = await customerEntities.findOne({ 'taxIdCode': "4" });
+        const customersColl = dbConnection.collection('customers');
+        let customer = await customersColl.findOne({ 'taxIdCode': "4" });
         mongoConnector.closeConnection();
         assert.equal(customer.btcAddress, '2N1SP7r92ZZJvYKG2oNtzPwYnzw62up7mTo');
 
@@ -219,6 +219,7 @@ describe('Customers', async () => {
         const customerDAO = new CustomerDAO(           {
             'dbConnection': dbConnection
         });
+
         let ris = await customerDAO.getCustomerFromAddress('mvd6qFeVkqH6MNAS2Y2cLifbdaX5XUkbZJ');
         assert.equal(ris.name, 'Wesley')
 

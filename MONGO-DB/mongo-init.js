@@ -1,6 +1,6 @@
-db = db.getSiblingDB('customers-transactions');
+db = db.getSiblingDB('exchange-txs-db');
 
-db.createCollection('customerEntities');
+db.createCollection('customers');
 db.createCollection('transactions');
 db.createCollection('transactionsError');
 db.createCollection('logs');
@@ -11,7 +11,7 @@ db.environmentVariables.insertOne({
     "value": "6"
 });
 
-db.customerEntities.insertMany([
+db.customers.insertMany([
     {
         "_id": "1",
         "taxIdCode": "1",
