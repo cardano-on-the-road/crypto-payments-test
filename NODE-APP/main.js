@@ -62,6 +62,7 @@ const main = async () => {
         btcSlotConfirmationsThreshold
     });
 
+    // Saving transactions
     if (readerResult.transactions) {
         await transactionsHandler.storeTransactions(readerResult.transactions);
         await logger('info', 'Saving transaction completed', 0, dbConnection);

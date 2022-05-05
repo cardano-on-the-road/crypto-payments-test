@@ -2,6 +2,7 @@ db = db.getSiblingDB('customers-transactions');
 
 db.createCollection('customerEntities');
 db.createCollection('transactions');
+db.createCollection('transactionsError');
 db.createCollection('logs');
 db.createCollection('environmentVariables');
 

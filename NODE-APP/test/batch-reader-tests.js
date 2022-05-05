@@ -144,8 +144,8 @@ describe('Transaction tests', async () => {
         const btcSlotConfirmationsThreshold = parseInt(ris.value);
 
         const customerDAO = new CustomerDAO({dbConnection});
-
-        const customersAddresses = await customerDAO.getCustomersAddresses();
+        const customers = await customerDAO.getCustomersList()
+        const customersAddresses = await customerDAO.getCustomersAddresses(customers);
         
         const transactionsHandler = new TransactionsHandler({dbConnection, 
             customersAddresses, 
@@ -172,8 +172,9 @@ describe('Transaction tests', async () => {
         const btcSlotConfirmationsThreshold = parseInt(ris.value);
 
         const customerDAO = new CustomerDAO({dbConnection});
+        const customers = await customerDAO.getCustomersList()
+        const customersAddresses = await customerDAO.getCustomersAddresses(customers);
 
-        const customersAddresses = await customerDAO.getCustomersAddresses();
         
         const transactionsHandler = new TransactionsHandler({dbConnection, 
             customersAddresses, 

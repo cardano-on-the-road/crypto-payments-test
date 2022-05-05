@@ -15,12 +15,19 @@ class TransactionsReader {
 
         try {
             filenames = fs.readdirSync(this.dirname);
-            filenames.forEach((filename) => {
-                filePath = path.resolve(this.dirname, filename);
-                fileContent = JSON.parse(fs.readFileSync(filePath));
-                transactions = [...transactions, ...fileContent.transactions];
-            });
-
+            for (var filename of filenames) {
+                if (filename.includes('.json')) {
+                    try {
+                        filePath = path.resolve(this.dirname, filename);
+                        fileContent = JSON.parse(fs.readFileSync(filePath));
+                        transactions = [...transactions, ...fileContent.transactions];
+                    }
+                    catch (error) {
+                        errors.push(error);
+                        continue;
+                    }
+                }
+            }
         } catch (error) {
             errors.push(error)
         } finally {
